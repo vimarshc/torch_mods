@@ -1,2 +1,25 @@
 Implementing research papers
 
+
+
+rnn_optim.py
+Implemented basic idea of David. et.al.
+Possible Improvements: 
+* Does not return loss in batches.
+* Add implementation to nn.functional
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+David Krueger & Roland Memisevic, REGULARIZING RNNS BY STABILIZING ACTIVATIONS, https://arxiv.org/pdf/1511.08400.pdf
