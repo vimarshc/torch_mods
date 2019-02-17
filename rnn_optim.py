@@ -4,7 +4,7 @@ from torch.nn import functional as F
 
 
 @weak_module
-class Normstabilizer(nn.NLLLoss):
+class NormstabilizerLoss(nn.NLLLoss):
 	"""
 	The norm-stabilizer was introduced by David et.al. 
 	Adds a term to the loss. 
@@ -40,7 +40,9 @@ class Normstabilizer(nn.NLLLoss):
 		_nllloss = F.nll_loss(input,target,weight=self.weight,ignore_index=self.ignore_index,reduction=self.reduction)
 		_normstabilizer_loss = F.mse_loss(h_x,h_y,size_average=False,reduce=True,reduction='sum')
 
-		_hyperparam = torch.autograd.Variable(torch.tensor(self.norm_stabilizer_param/sequence_length), requires_grad=True)
+
+		#possible float correction
+		_hyperparam = self.norm_stabilizer_param/sequence_length
 
 		return _nllloss + _hyperparam*_normstabilizer_loss 
 

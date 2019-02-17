@@ -1,0 +1,69 @@
+* Implement norm stabilizer: 
+	* https://github.com/capybaralet/recurrent-batch-normalization
+	* https://arxiv.org/pdf/1511.08400.pdf
+
+* Implement HRNN:
+	* Reccurrent h2h batch norm: https://arxiv.org/pdf/1603.09025.pdf
+	* Automatic boundy detection: 
+		* https://github.com/HanqingLu/MultiscaleRNN
+	* Multiple time scales:
+		* https://arxiv.org/abs/1402.3511
+
+* Implement Hessian Free Optimization: 
+	
+* Implement Word2Vec: 
+	* PPI
+	* nce_loss. 
+	* Document Vectors
+
+Pytorch:
+	* YellowFin 
+	* NormStabilizer 
+	* NCE Loss
+
+
+Tensorflow:
+	* https://github.com/tensorflow/tensorflow/blob/r1.12/tensorflow/python/ops/nn_impl.py#L1198
+
+
+* Trainning Word Embeddings with Hessian Free Optimization Noise Contrastive Estimation. 
+
+
+* Can the hidden state be used as word embeddings? 
+
+
+* Name Similarity (Company to domain, names from two different sources):
+	Things to try: 
+		* Simulaneous: 	
+			* Batch Norm. 
+			* Recurrent Batch norm. (https://arxiv.org/pdf/1603.09025.pdf)
+			* Batch processing. 
+			* Drop out? 
+			* LSTM
+			* Norm Stabilizer
+		* NS:
+			* HRNN 
+			*  
+
+## Pytorch support: 	
+	* https://github.com/PetrochukM/PyTorch-NLP
+	* Mila Libs:
+		* https://github.com/mila-udem/fuel
+
+## Distributional Sematics: 
+	* https://en.wikipedia.org/wiki/Distributional_semantics
+
+
+
+Cat ID: 1 job posting status; 
+client_details
+client_reg for companies; 
+
+ALL COMPS. 
+mysql> select count(distinct(company_id)) ,status from client_reg group by status;
+
+
+ACTIVE:
+
+
+select com.company_id, com.company_name, c.website from company com inner join client_details c on com.company_id = c.company_id where com.company_id in (select distinct(s.company_id) from subscription s where end_date > 2018-01-01)
