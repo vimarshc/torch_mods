@@ -28,16 +28,38 @@ class NormstabilizerLoss(nn.NLLLoss):
 
 	@weak_script_method
 	def forward(self, input, target,hidden_layers):
+		'''
+		Expecting hidden_layers in the (sequence_length, batch_size, hidden_size)
+		
+		The paper defines the additional loss term as: 
+
+			beta*(1/T) Σ(||ht||2 - ||ht-1||2)^2
+		
+		Where T is the sequence length, t is the time step and ht is the hidden state at timestep t
+
+		After taking the norm the tensor condenses to (seq_len,batch_size), each value representing the l2 norm of a hidden state.
+		
+		We roll this vector and describe this term as the MSELoss where the rolled vector is the target and 
+		the original vector is the input. 
+		'''
 		sequence_length = hidden_layers.shape[0]
 
-		h_y = hidden_layers.norm(dim=2)
-		h_x = torch.roll(h_y,-1,0)
+
+
+
+		# h_y has shape (sequence_length, batch_size)
+		# Each value being the l2 norm of a hidden state. 
+		h_x = hidden_layers.norm(dim=2)
+		h_y = torch.roll(h_y,-1,0)
 		
 		h_y = h_y[:-1].flatten()
 		h_x = h_x[:-1].flatten()
 
 
+		#default nll_loss. Expecting log softmax output. 
 		_nllloss = F.nll_loss(input,target,weight=self.weight,ignore_index=self.ignore_index,reduction=self.reduction)
+		
+
 		_normstabilizer_loss = F.mse_loss(h_x,h_y,size_average=False,reduce=True,reduction='sum')
 
 

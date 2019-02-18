@@ -26,6 +26,7 @@ learn.add_argument('--max_norm', default=1, type=int, help='Norm cutoff to preve
 learn.add_argument('--loss', default='nlll', type=str, help='Kind of Loss to be calculated')
 learn.add_argument('--hidden_size', default=1000, type=int, help='Size of hidden state')
 learn.add_argument('--optimizer', default='Adam', help='Type of optimizer. SGD|Adam|ASGD are supported [default: Adam]')
+learn.add_argument('--norm_beta', default=100,type=str, help='Norm Stabilizer hyperparameter')
 learn.add_argument('--dynamic_lr', action='store_true', default=False, help='Use dynamic learning schedule.')
 learn.add_argument('--milestones', nargs='+', type=int, default=[5,10,15], help=' List of epoch indices. Must be increasing. Default:[5,10,15]')
 learn.add_argument('--decay_factor', default=0.5, type=float, help='Decay factor for reducing learning rate [default: 0.5]')
@@ -100,7 +101,7 @@ def train(train_loader, model, args):
     if args.loss == 'nlll':
         criterion = nn.NLLLoss()
     elif args.loss == 'stab_norm':
-        criterion = nn.NormstabilizerLoss()
+        criterion = nn.NormstabilizerLoss(norm_stabilizer_param=args.norm_beta)
 
 
 
