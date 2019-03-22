@@ -85,3 +85,6 @@ class PennTree(Dataset):
     #     num_class = [self.label.count(c) for c in label_set]
     #     class_weight = [num_samples/float(self.label.count(c)) for c in label_set]    
     #     return class_weight, num_class
+
+class Mikolov_PennTreeChar(Dataset):
+    
