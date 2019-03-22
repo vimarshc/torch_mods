@@ -30,7 +30,7 @@ import matplotlib.pyplot as plt
 
 
 def clones(module, N):
-    "
+    '''
     A helper function for producing N identical layers (each with their own parameters).
     
     inputs: 
@@ -39,9 +39,9 @@ def clones(module, N):
 
     returns:
         a ModuleList with the copies of the module (the ModuleList is itself also a module)
-    "
+    '''
     return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
-
+    
 # Problem 1
 class RNN(nn.Module): # Implement a stacked vanilla RNN with Tanh nonlinearities.
   def __init__(self, emb_size, hidden_size, seq_len, batch_size, vocab_size, num_layers, dp_keep_prob):
@@ -180,6 +180,40 @@ class GRU(nn.Module): # Implement a stacked GRU RNN
   def generate(self, input, hidden, generated_seq_len):
     # TODO ========================
     return samples
+
+
+
+class RNN(nn.Module): # Implements a basic 2 layer hierarchical LSTM.
+    def __init__(self, input_size, hidden_size, output_size, num_layers=1):
+        super(RNN, self).__init__()
+
+        self.hidden_size = hidden_size
+
+        self.rnn_1 = nn.LSTM(input_size, hidden_size[0], num_layers)    
+        self.rnn_2 = nn.LSTM(hidden_size[0], hidden_size[1], num_layers)    
+
+        self.i2o = nn.Linear(hidden_size[1], output_size)
+        self.softmax = nn.LogSoftmax(dim=1)
+
+    def forward(self, input):
+        layer_op = torch.empty([len(input),1,self.hidden_size[0]], requires_grad=False)
+        for idx,input_it in enumerate(input):
+            hidden_1 = self.initHidden(self.hidden_size[0])
+            output_1, hidden_1 = self.rnn_1(input_it,hidden_1)
+            layer_op[idx][0] = hidden_1[0].view(self.hidden_size[0])
+
+        hidden_2 = self.initHidden(self.hidden_size[1])
+        output_2, hidden_2 = self.rnn_2(layer_op, hidden_2)
+
+        _y = hidden_2[0].view(1,self.hidden_size[1])
+        y = self.i2o(_y)
+        y = self.softmax(y)
+        return output_2,hidden_2,y
+
+    def initHidden(self, size):
+        return (torch.zeros(1, 1, size),
+                torch.zeros(1, 1, size))
+
 
 
 # Problem 3

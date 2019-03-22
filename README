@@ -1,2 +1,62 @@
 Implementing research papers
 
+
+
+The ptb-lm has been inspired from an assignment from Montreal Institute of Learning Algorithms. Added to serve as a basic API which can be manipulated easily. 
+
+The data has also been taken from the same source, however it definitely looks like the 
+data has been taken from Mikolov, thus the *partitioning* is the same is as the following: 
+	* http://www.fit.vutbr.cz/~imikolov/rnnlm/char.pdf (sub word Language model)
+	* https://arxiv.org/abs/1603.09025 (recurrent batch norm)
+
+
+Implemented (With TODO):
+	* https://arxiv.org/abs/1511.08400
+		Implemented the norm stabilizer which can be found in rnn_optim.
+		* Would like to test out with PTB at a token level.
+
+		I think this version is production ready.
+
+	* Basic Version of a Hierarchical RNN
+		This has been implemented using single layer LSTM (Can be replaced with LSTM cells)
+		The current version takes no boundry decisions.
+
+		This ideas was inspired from https://arxiv.org/pdf/1609.01704.pdf. 
+		Where the paper implements a mechanism to detect boundry while processing the input. 
+		Right now the version implemented in this paper does no such activity.
+
+			todo: 
+				* Implement the boundry decision   
+
+
+TODO 
+	(Papers/Ideas):
+	* Recurrent Batch Norm: https://arxiv.org/abs/1603.09025
+		Originally I thought this could be easily achieved with an LSTM cell, but upon further inspection I don't think that's possible. 
+		While have to implement the LSTM in vanilla form and inject BatchNorm
+	
+	* Ideas from: 
+		* https://arxiv.org/pdf/1211.5063.pdf
+		* https://www.cs.toronto.edu/~fritz/absps/momentum.pdf
+
+		Both papers highlight the importance of good initilizations. 
+			* [2] used normal distribution for it's experiments, however emphasizes that the scale of the initilizations vary upon the task at hand. 
+			* Both papers emphasize the importance of the spectal radius of the initilizations. 
+
+			Implement function to draw from sample and ensure a spectral radius of 1. 
+
+	* Clockwork RNN: 
+		https://arxiv.org/abs/1402.3511
+		 The forward prop is relatively straight forward. Need to verify the backward pass.
+
+	* Word Embeddings
+		* https://arxiv.org/pdf/1310.4546.pdf
+		The overall implementation is relatively straightword but PyTorch lacks support for NCE loss. 
+		Is available in tensorflow for reference: https://github.com/tensorflow/tensorflow/blob/r1.13/tensorflow/python/ops/nn_impl.py#L1466
+
+Interesteing in Future Work: 
+	* Hessian Free Optimization:
+		http://www.cs.toronto.edu/~jmartens/docs/Deep_HessianFree.pdf
+		A small search yeilds the idea that this can't be implemented in PyTorch using the autograd framework. Though Martens has released his MATLAB implementation: 
+		http://www.cs.toronto.edu/~jmartens/docs/HFDemo.zip
+
