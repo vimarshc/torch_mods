@@ -28,12 +28,22 @@ Implemented (With TODO):
 			todo: 
 				* Implement the boundry decision   
 
+	* Added basic structure for a ClockWork RNN.
+	* Added basic forward prop of vanilla (Pytorch RNN)  
 
 TODO 
+	Infrastructure:
+		* Add Graphs from MILA assignment.
+		* Add tests for clockwork RNN. 
+		* Add graphs from clockwork RNN paper. 
+		* Add HRNN, CWRNN in config.  
+
 	(Papers/Ideas):
 	* Recurrent Batch Norm: https://arxiv.org/abs/1603.09025
 		Originally I thought this could be easily achieved with an LSTM cell, but upon further inspection I don't think that's possible. 
 		While have to implement the LSTM in vanilla form and inject BatchNorm
+
+	* Improvements from https://arxiv.org/pdf/1212.0901.pdf
 	
 	* Ideas from: 
 		* https://arxiv.org/pdf/1211.5063.pdf
@@ -47,7 +57,12 @@ TODO
 
 	* Clockwork RNN: 
 		https://arxiv.org/abs/1402.3511
-		 The forward prop is relatively straight forward. Need to verify the backward pass.
+		 Added code for forward prop. Need to add tests, debug and verify Backward prop works as mentioned in paper.
+	
+	* MultiScale HRNN:
+		https://arxiv.org/pdf/1609.01704.pdf
+		Includes a non-differentiable function which is handled in some way. 
+
 
 	* Word Embeddings
 		* https://arxiv.org/pdf/1310.4546.pdf
@@ -59,4 +74,10 @@ Interesteing in Future Work:
 		http://www.cs.toronto.edu/~jmartens/docs/Deep_HessianFree.pdf
 		A small search yeilds the idea that this can't be implemented in PyTorch using the autograd framework. Though Martens has released his MATLAB implementation: 
 		http://www.cs.toronto.edu/~jmartens/docs/HFDemo.zip
+
+
+Contributing:
+	* NormStabilizer:
+		* Works for Sequence? 
+		* Works for multiple layers?
 

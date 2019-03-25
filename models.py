@@ -1,3 +1,5 @@
+#https://github.com/vilaysov/IFT6135H19_assignment/blob/master/models.py
+from math import ceil 
 import torch 
 import torch.nn as nn
 
@@ -6,6 +8,8 @@ import torch.nn.functional as F
 import math, copy, time
 from torch.autograd import Variable
 import matplotlib.pyplot as plt
+
+from exceptions import *
 
 # NOTE ==============================================
 #
@@ -72,6 +76,12 @@ class RNN(nn.Module): # Implement a stacked vanilla RNN with Tanh nonlinearities
     # for Pytorch to recognize these parameters as belonging to this nn.Module 
     # and compute their gradients automatically. You're not obligated to use the
     # provided clones function.
+    self.emb_size = emb_size
+    self.hidden_size = hidden_size
+    self.seq_len = seq_len
+    self.num_layers = num_layers
+
+    self.activation = nn.Tanh()
 
   def init_weights(self):
     # TODO ========================
@@ -86,7 +96,9 @@ class RNN(nn.Module): # Implement a stacked vanilla RNN with Tanh nonlinearities
     """
     This is used for the first mini-batch in an epoch, only.
     """
-    return # a parameter tensor of shape (self.num_layers, self.batch_size, self.hidden_size)
+
+    # a parameter tensor of shape (self.num_layers, self.batch_size, self.hidden_size)
+    return torch.zeros([self.num_layers, self.batch_size,self.hidden_size])
 
   def forward(self, inputs, hidden):
     # TODO ========================
@@ -154,6 +166,38 @@ class RNN(nn.Module): # Implement a stacked vanilla RNN with Tanh nonlinearities
    
     return samples
 
+class PyTorch_RNN(nn.Module):
+  def __init__(self, emb_size, hidden_size, seq_len, batch_size, vocab_size, num_layers, dp_keep_prob,config=None):
+    self.emb_size = emb_size
+    self.hidden_size = hidden_size
+    self.seq_len = seq_len
+    self.batch_size = batch_size
+    self.vocab_size = vocab_size
+    self.num_layers = num_layers
+    self.dp_prob = dp_keep_prob
+    self.config = config
+
+    self.decoder = nn.Linear(self.hidden_size, self.vocab_size)
+
+    self.rnn = nn.RNN(input_size=self.emb_size,hidden_size=hidden_size,num_layers=self.num_layers,dropout=1-self.dp_keep_prob)
+
+    if config:
+      self.init_weights(config['mean'], config['std'])
+
+  def forward(self,inputs,hidden):
+    x_embs = self.embedding(inputs)
+    output, h_n = self.rnn(x_embs,hidden)
+    return self.decoder(output), h_n
+
+  def init_hidden(self):
+    # a parameter tensor of shape (self.num_layers, self.batch_size, self.hidden_size)
+    return torch.zeros([self.num_layers, self.batch_size, self.hidden_size])
+
+  def init_weights(self,mean,std):
+    for name, param in rnn.named_parameters():
+      if 'weight' in name:
+         nn.init.normal(param)
+
 
 # Problem 2
 class GRU(nn.Module): # Implement a stacked GRU RNN
@@ -183,7 +227,7 @@ class GRU(nn.Module): # Implement a stacked GRU RNN
 
 
 
-class RNN(nn.Module): # Implements a basic 2 layer hierarchical LSTM.
+class Hierarchical_RNN(nn.Module): # Implements a basic 2 layer hierarchical LSTM.
     def __init__(self, input_size, hidden_size, output_size, num_layers=1):
         super(RNN, self).__init__()
 
@@ -213,6 +257,124 @@ class RNN(nn.Module): # Implements a basic 2 layer hierarchical LSTM.
     def initHidden(self, size):
         return (torch.zeros(1, 1, size),
                 torch.zeros(1, 1, size))
+
+
+class ClockWork_RNNCell(nn.Module):
+    '''
+    A Clock RNN partitions the hidden layer into blocks. Each block is assigned a time period Tn. 
+    
+    To make it more generic, taking the case where blocks are not continous or multiple blocks of 
+    size 1 have the same time period:
+
+    For a single trainning example, the hidden layer is a 1-D Tensor of size (hidden_size).
+    Each value in this hidden layer has a time period associated with it. Which renders the hidden layer 
+    Single Example:
+        A list of (hidden_state_value, tn) tuples of size hidden_size. 
+        Or In PyTorch terms: (Inserty Answer)
+    
+    Hidden State Size: H
+    Block Size: B
+    
+    The forward pass works as follows: 
+        1. The hidden state gets initilized as a Tensor of size (batch_size,hidden_size)
+        2. Each hidden state will be partitoned into blocks rendering a Tensor of size
+            if H % B == 0:
+                (batch_size, H/B, B)
+            else:
+                (batch_size,H/B + 1, ceil(B))
+        3. Each Tensor along the second dimension (H/B tensors each of size B) will be assigned a time period (tn)
+        creating a tensor of size H/B; Tp.
+        4. The input will be of dimension (seq_len, batch_size, input_size). Each time step ti renders an input of size 
+        (batch_size,input_size). Processing this input for timestep ti happens in two steps:
+            We will be processing the hidden_state_weights in both steps after creating a duplicate tensor
+            a) Iterating through Tp(j:0->H/B), 
+                if ti % Tp[j]:
+                    The weights will keep their value
+                else:
+                    The weights will be initilized with 0
+                This will leave only those rows of the weight matrix with their values for which the corresponding Tp[j] % ti == 0
+            b) The weight matrix of size (hidden_size,hidden_size) will have ceratin rows as 0
+            Considering one row the corresponding hidden state time period is j, blocks in this row of weights corresponding to blocks in the hidden state which have time period less than j will be initilized as 0  
+            (and same will be repeated for all rows rendering certain columns as 0)
+
+    '''
+    def __init__(self,emb_size, hidden_size,seq_len, batch_size,vocab_size,block_size, config):
+      if not block_size:
+          raise ClockWork_BlockSizeNone
+
+      if block_size > hidden_size:
+          raise ClockWork_BlockSizeError
+
+      self.block_size = block_size
+      self.hidden_size = hidden_size
+      self.emb_size = emb_size
+      self.block_dim = ceil(float(hidden_size)/block_size)
+
+
+      self.Wx = self.init_weights_uniform(torch.zeros(hidden_size,emb_size))
+      self.Wh = self.init_weights_uniform(torch.zeros(hidden_size,hidden_size))
+
+
+      self.bx = torch.zeros(hidden_size)
+      self.bh = torch.zeros(hidden_size)
+
+
+
+      if config['activation'] == 'tanh':
+        self.activation = nn.Tanh()
+      elif config['activation'] == 'relu':
+        self.activation = nn.ReLU()
+      else:
+        raise ActivationError
+
+      self.time_periods = self.assign_time_period(hidden_size, block_size)
+      self.modify_recurrent_connections()
+
+    def forward(self, input, hidden):
+      '''
+      Input will be of shape (seq_len, batch_size, embedding_size)
+      '''
+
+      for time_step,_in in enumerate(input, start=1):
+        Wh_temp = self.Wh
+        Wx_temp = self.Wx
+        for row_idx, row in Wh_temp:
+          tp = self.time_periods[math.floor(float(row_idx)/self.block_size)]
+          if time_step % tp != 0:
+            Wh_temp[row_idx][:] = 0
+            Wx_temp[row_idx][:] = 0
+        hidden = self.activation(F.linear(hidden,Wh_temp,self.bh) + F.linear(_in,Wx_temp))
+
+
+
+    def assign_time_period(self, hidden_size,block_size):
+      time_periods = []
+      for it in range(1,self.block_dim + 1):
+        time_periods.append(pow(2,it-1))
+
+      return time_periods
+
+    def modify_recurrent_connections(self):
+      '''
+      Recurrent connections between a block exist only if the time period of a block is lesser than the block 
+      '''
+      for row_idx,row in enumerate(self.Wh):
+        for con_idx,connection in enumerate(row):
+          current_tp = self.time_periods[math.floor(float(row_idx)/self.block_size)]
+          connection_tp = self.time_periods[math.floor(float(con_idx)/self.block_size)]
+
+          if connection_tp < current_tp:
+            self.Wh[row_idx][con_idx] = 0
+
+
+
+
+    def init_hidden(self):
+      # a parameter tensor of shape (self.num_layers, self.batch_size, self.hidden_size)
+      return torch.zeros([self.num_layers, self.batch_size, self.hidden_size])
+
+  def init_weights_uniform(self, tensor, mean=0, std=1):
+    return nn.init.normal_(tensor,mean=mean,std=std)
 
 
 
