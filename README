@@ -68,6 +68,8 @@ TODO
 		* https://arxiv.org/pdf/1310.4546.pdf
 		The overall implementation is relatively straightword but PyTorch lacks support for NCE loss. 
 		Is available in tensorflow for reference: https://github.com/tensorflow/tensorflow/blob/r1.13/tensorflow/python/ops/nn_impl.py#L1466
+		The sampling has been discussed in this thread here: 
+		https://github.com/pytorch/pytorch/issues/3718
 
 Interesteing in Future Work: 
 	* Hessian Free Optimization:
