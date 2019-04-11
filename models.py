@@ -377,6 +377,36 @@ class ClockWork_RNNCell(nn.Module):
     return nn.init.normal_(tensor,mean=mean,std=std)
 
 
+class RNN_AutoEncoder(nn.Module):
+  '''
+  Basic RNN AutoEncoder
+  '''
+  def __init__(self,embedding_size, layersizes=[20,10,5], model_type='lstm', vocab_size):
+    self.embsize = embedding_size
+    self.layer_sizes = layersizes
+
+    if model_type == 'lstm':
+      self.model_type = nn.LSTM
+    elif model_type = 'gru':
+      self.model_type = nn.GRU
+    else:
+      self.model_type = nn.RNN
+
+    self.encoder = self.create_encoder()
+    self.decoder = self.create_decoder()
+    self.output = nn.Linear(self.layer_sizes[0], vocab_size)
+
+
+
+  def create_encoder()
+    dims_arr = [self.embsize]
+    dims_arr.extend(self.layer_sizes)
+
+    return [self.model_type(dims_arr[idx], dims_arr[idx+1], 1) for idx in range(len(dims_arr) - 1)]
+  def create_decoder()
+    dims_arr = reversed(self.layer_sizes)
+    return [self.model_type(dims_arr[idx], dims_arr[idx+1], 1) for idx in range(len(dims_arr) - 1)]
+
 
 # Problem 3
 ##############################################################################

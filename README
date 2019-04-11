@@ -44,6 +44,12 @@ TODO
 		While have to implement the LSTM in vanilla form and inject BatchNorm
 
 	* Improvements from https://arxiv.org/pdf/1212.0901.pdf
+
+	* Stack RNN
+		Paper is here[1] and C++ implementation is here[2]. Paper is by Mikolov where they're using a stack actions to retain memory. Has a discussion where we could use multiple stacks in parallel and have have operations to manipulate memory amongst the parallel stacks.   
+
+		[1]https://papers.nips.cc/paper/5857-inferring-algorithmic-patterns-with-stack-augmented-recurrent-nets.pdf
+		[2] https://github.com/facebook/Stack-RNN
 	
 	* Ideas from: 
 		* https://arxiv.org/pdf/1211.5063.pdf
@@ -57,7 +63,7 @@ TODO
 
 	* Clockwork RNN: 
 		https://arxiv.org/abs/1402.3511
-		 Added code for forward prop. Need to add tests, debug and verify Backward prop works as mentioned in paper.
+		 Added code for forward prop. Need to add tests, debug and verify Backward prop works as mentioned in paper and can be handled as is by PyTorch. There's a discussion in the paper about how the time period allocation can be trained as well which willl require the modulo function to be differentiable. 
 	
 	* MultiScale HRNN:
 		https://arxiv.org/pdf/1609.01704.pdf
@@ -67,9 +73,21 @@ TODO
 	* Word Embeddings
 		* https://arxiv.org/pdf/1310.4546.pdf
 		The overall implementation is relatively straightword but PyTorch lacks support for NCE loss. 
-		Is available in tensorflow for reference: https://github.com/tensorflow/tensorflow/blob/r1.13/tensorflow/python/ops/nn_impl.py#L1466
-		The sampling has been discussed in this thread here: 
-		https://github.com/pytorch/pytorch/issues/3718
+		
+
+		Is available in tensorflow[1]. TensorFlow samples negative examples using a log uniform candidate sampler which can be found here[3] which expects input sorted in decresing order of frequency. 
+
+		PyTorch does not have support for a log uniform sampler but has been discussed here.[2]
+		Thinking of having a peak at how negative sampling has been achieved in word2vec. Adding the source code here for reference. 
+
+		[4] Introduces Few Advances in Pre-Trainning Word Embeddings. 
+		
+
+		
+		[1] https://github.com/tensorflow/tensorflow/blob/r1.13/tensorflow/python/ops/nn_impl.py#L1466
+		[2] https://github.com/pytorch/pytorch/issues/3718
+		[3]https://github.com/tensorflow/tensorflow/blob/r1.13/tensorflow/python/ops/nn_impl.py#L1360
+		[4] https://arxiv.org/pdf/1712.09405.pdf
 
 Interesteing in Future Work: 
 	* Hessian Free Optimization:
@@ -77,6 +95,11 @@ Interesteing in Future Work:
 		A small search yeilds the idea that this can't be implemented in PyTorch using the autograd framework. Though Martens has released his MATLAB implementation: 
 		http://www.cs.toronto.edu/~jmartens/docs/HFDemo.zip
 
+	* Fast Linear Model for Knowledge Graph Embeddings 
+	https://arxiv.org/pdf/1710.10881.pdf
+
+	* Differential State Framework
+	https://arxiv.org/pdf/1703.08864.pdf
 
 Contributing:
 	* NormStabilizer:
