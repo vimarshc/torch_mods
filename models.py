@@ -383,7 +383,8 @@ class RNN_AutoEncoder(nn.Module):
   '''
   def __init__(self,embedding_size, layersizes=[20,10,5], model_type='lstm', vocab_size):
     self.embsize = embedding_size
-    self.layer_sizes = layersizes
+    self.encoding_layer_sizes = layersizes
+    self.decoding_layer_sizes = reversed(layersizes)
 
     if model_type == 'lstm':
       self.model_type = nn.LSTM
@@ -406,6 +407,44 @@ class RNN_AutoEncoder(nn.Module):
   def create_decoder()
     dims_arr = reversed(self.layer_sizes)
     return [self.model_type(dims_arr[idx], dims_arr[idx+1], 1) for idx in range(len(dims_arr) - 1)]
+
+  def initHidden(self, size, batch):
+    #Add Hidden state for GRU and RNN
+      return (torch.zeros(1, batch, size),
+              torch.zeros(1, batch, size))
+  
+  def forward(_input):
+    batch_size = _input.shape[1]
+    in_arr = [_input]
+    
+    #Encoding
+    for idx,layer in enumerate(self.encoding_layer_sizes):
+      hidden = self.initHidden(layer, batch_size)
+      layer_input = in_arr[idx]
+      layer_model = self.encoder[idx]
+      output, current_state = layer_model(layer_input, hidden)
+      in_arr.append(output)
+
+    out_arr = [in_arr[-1]]
+    #Decoding:
+    for idx, layer in enumerate(self.decoding_layer_sizes):
+      hidden = self.initHidden(layer, batch_size)
+      layer_input = out_arr[idx]
+      layer_model = self.decoder[idx]
+      output, current_state = layer_model(layer_input, hidden)
+      out_arr.append(output)
+
+    #Returning without applying softmax 
+    return self.output(out_arr[-1])
+
+
+
+
+
+
+
+
+
 
 
 # Problem 3
